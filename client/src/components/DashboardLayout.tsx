@@ -21,15 +21,20 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Database, Bot, DollarSign, Code2, Network, Plug, Zap } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: Database, label: "Function Registry", path: "/registry" },
+  { icon: Bot, label: "KIMI Orchestrator", path: "/orchestrator" },
+  { icon: DollarSign, label: "Cost Calculator", path: "/cost" },
+  { icon: Code2, label: "Edge Templates", path: "/templates" },
+  { icon: Network, label: "Architecture", path: "/architecture" },
+  { icon: Plug, label: "Integrations", path: "/integrations" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -170,8 +175,9 @@ function DashboardLayoutContent({
               </button>
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                  <Zap className="h-4 w-4 text-primary shrink-0" />
+                  <span className="font-bold tracking-tight truncate text-primary">
+                    KIMI SWARM
                   </span>
                 </div>
               ) : null}
