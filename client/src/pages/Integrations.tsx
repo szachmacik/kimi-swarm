@@ -32,7 +32,7 @@ export default function Integrations() {
     onMutate: () => setAccStatus("pending"),
     onSuccess: (data) => {
       setAccStatus("success");
-      toast.success(`KIMI agent synced to ai-control-center (${data.functionsSynced} functions)`);
+      toast.success(`KIMI agent synced to ai-control-center (${data.synced} functions)`);
       refetchLogs();
     },
     onError: (err) => {
@@ -108,8 +108,8 @@ export default function Integrations() {
             </div>
 
             <Button
-              onClick={() => syncAccMutation.mutate({ supabaseUrl: AI_CONTROL_CENTER_URL, supabaseKey: accKey })}
-              disabled={!accKey || syncAccMutation.isPending || !user}
+              onClick={() => syncAccMutation.mutate()}
+              disabled={syncAccMutation.isPending || !user}
               className="w-full gap-2"
               size="sm"
             >
@@ -164,8 +164,8 @@ export default function Integrations() {
             </div>
 
             <Button
-              onClick={() => syncSentinelMutation.mutate({ supabaseUrl: SENTINEL_URL, supabaseKey: sentinelKey })}
-              disabled={!sentinelKey || syncSentinelMutation.isPending || !user}
+              onClick={() => syncSentinelMutation.mutate()}
+              disabled={syncSentinelMutation.isPending || !user}
               className="w-full gap-2"
               size="sm"
               variant="outline"

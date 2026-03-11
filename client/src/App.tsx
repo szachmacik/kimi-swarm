@@ -13,6 +13,10 @@ import CostCalculator from "./pages/CostCalculator";
 import Templates from "./pages/Templates";
 import Architecture from "./pages/Architecture";
 import Integrations from "./pages/Integrations";
+import SemanticSearch from "./pages/SemanticSearch";
+import AIControlCenter from "./pages/AIControlCenter";
+import SentinelMonitor from "./pages/SentinelMonitor";
+import AutoDeploy from "./pages/AutoDeploy";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Loader2, Zap } from "lucide-react";
 
@@ -87,6 +91,10 @@ function Router() {
         <Route path="/templates" component={Templates} />
         <Route path="/architecture" component={Architecture} />
         <Route path="/integrations" component={Integrations} />
+        <Route path="/semantic-search" component={SemanticSearch} />
+        <Route path="/ai-control-center" component={AIControlCenter} />
+        <Route path="/sentinel" component={SentinelMonitor} />
+        <Route path="/auto-deploy" component={AutoDeploy} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

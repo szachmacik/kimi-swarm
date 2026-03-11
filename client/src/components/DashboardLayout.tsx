@@ -21,20 +21,24 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Database, Bot, DollarSign, Code2, Network, Plug, Zap } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Database, Bot, DollarSign, Code2, Network, Plug, Zap, Search, Cpu, Shield, Rocket } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Database, label: "Function Registry", path: "/registry" },
-  { icon: Bot, label: "KIMI Orchestrator", path: "/orchestrator" },
-  { icon: DollarSign, label: "Cost Calculator", path: "/cost" },
-  { icon: Code2, label: "Edge Templates", path: "/templates" },
-  { icon: Network, label: "Architecture", path: "/architecture" },
-  { icon: Plug, label: "Integrations", path: "/integrations" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/", group: "core" },
+  { icon: Database, label: "Function Registry", path: "/registry", group: "core" },
+  { icon: Bot, label: "KIMI Orchestrator", path: "/orchestrator", group: "autonomous" },
+  { icon: Search, label: "Semantic Search", path: "/semantic-search", group: "autonomous" },
+  { icon: Rocket, label: "Auto-Deploy", path: "/auto-deploy", group: "autonomous" },
+  { icon: Cpu, label: "AI Control Center", path: "/ai-control-center", group: "integrations" },
+  { icon: Shield, label: "Sentinel Monitor", path: "/sentinel", group: "integrations" },
+  { icon: DollarSign, label: "Cost Calculator", path: "/cost", group: "tools" },
+  { icon: Code2, label: "Edge Templates", path: "/templates", group: "tools" },
+  { icon: Network, label: "Architecture", path: "/architecture", group: "tools" },
+  { icon: Plug, label: "Integrations", path: "/integrations", group: "tools" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -186,19 +190,55 @@ function DashboardLayoutContent({
 
           <SidebarContent className="gap-0">
             <SidebarMenu className="px-2 py-1">
-              {menuItems.map(item => {
+              {/* Core */}
+              {menuItems.filter(i => i.group === "core").map(item => {
                 const isActive = location === item.path;
                 return (
                   <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.path)}
-                      tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
-                    >
-                      <item.icon
-                        className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
-                      />
+                    <SidebarMenuButton isActive={isActive} onClick={() => setLocation(item.path)} tooltip={item.label} className="h-9 transition-all font-normal">
+                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+              {/* Autonomous section */}
+              {!isCollapsed && <div className="px-2 pt-3 pb-1"><span className="text-xs text-muted-foreground/50 uppercase tracking-wider font-medium">Autonomous</span></div>}
+              {isCollapsed && <div className="my-1 border-t border-border/30" />}
+              {menuItems.filter(i => i.group === "autonomous").map(item => {
+                const isActive = location === item.path;
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton isActive={isActive} onClick={() => setLocation(item.path)} tooltip={item.label} className="h-9 transition-all font-normal">
+                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+              {/* Integrations section */}
+              {!isCollapsed && <div className="px-2 pt-3 pb-1"><span className="text-xs text-muted-foreground/50 uppercase tracking-wider font-medium">Integrations</span></div>}
+              {isCollapsed && <div className="my-1 border-t border-border/30" />}
+              {menuItems.filter(i => i.group === "integrations").map(item => {
+                const isActive = location === item.path;
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton isActive={isActive} onClick={() => setLocation(item.path)} tooltip={item.label} className="h-9 transition-all font-normal">
+                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+              {/* Tools section */}
+              {!isCollapsed && <div className="px-2 pt-3 pb-1"><span className="text-xs text-muted-foreground/50 uppercase tracking-wider font-medium">Tools</span></div>}
+              {isCollapsed && <div className="my-1 border-t border-border/30" />}
+              {menuItems.filter(i => i.group === "tools").map(item => {
+                const isActive = location === item.path;
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton isActive={isActive} onClick={() => setLocation(item.path)} tooltip={item.label} className="h-9 transition-all font-normal">
+                      <item.icon className={`h-4 w-4 ${isActive ? "text-primary" : ""}`} />
                       <span>{item.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

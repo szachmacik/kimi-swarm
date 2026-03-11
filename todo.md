@@ -29,9 +29,9 @@
 - [x] pgvector semantic search: match_functions RPC via orchestrator.semanticSearch
 
 ## Phase 7: Tests, checkpoint, delivery
-- [x] Vitest tests: 17 tests passing (Function Registry, Edge Templates, KIMI Orchestrator, Integrations)
+- [x] Vitest tests: 20 tests passing
 - [x] Seed: 83 functions + 5 templates seeded to DB
-- [ ] Checkpoint + delivery
+- [x] Checkpoint + delivery
 
 ## Phase 8: Zabezpieczenie dostępu — Admin Gate
 - [x] Middleware server: wszystkie tRPC procedury zmienione z publicProcedure na adminProcedure
@@ -39,3 +39,42 @@
 - [x] Whitelist: tylko owner (OWNER_OPEN_ID) automatycznie dostaje role=admin przy pierwszym logowaniu
 - [x] Login page: AdminLogin.tsx z komunikatem "Restricted Access — Admin Only" i Sentinel monitoring info
 - [x] Testy: 3 nowe testy access control (non-admin throws, admin succeeds, anon FORBIDDEN) — 20/20 passing
+
+## Phase 20-26: Rozbudowa 5 punktów autonomiczności
+
+### Punkt 1: pgvector Semantic Search
+- [x] tRPC procedure `registry.semanticSearch` z cosine similarity przez KIMI embedding API
+- [x] UI: dedykowana strona SemanticSearch z podglądem podobieństwa i wynikami
+- [x] Seed embeddingów przez KIMI moonshot-v1-embedding (1536d)
+- [x] Batch embedding generation dla 83 funkcji
+
+### Punkt 2: Orchestrator KIMI K2.5 z tool-calling
+- [x] Prawdziwy KIMI K2.5 API (moonshot-v1-128k) z tool-calling
+- [x] 10 narzędzi: searchFunctions, semanticSearch, deployEdgeFunction, queryACC, querySentinel, executeTool, generateCode, calculateCost, listTemplates, getExecutionHistory
+- [x] Plan visualizer: drzewo kroków z statusami w czasie rzeczywistym
+- [x] Historia sesji orchestratora w bazie danych
+- [x] Rozbudowany Orchestrator.tsx z chat interface, tool call log, execution history
+
+### Punkt 3: Auto-deploy Edge Functions
+- [x] Supabase Management API: create/update/deploy Edge Function
+- [x] KIMI generuje kod Edge Function na żądanie (KIMI Generate tab)
+- [x] Deploy pipeline: generate → deploy → log → Sentinel notify
+- [x] Status tracker deploymentów w UI (AutoDeploy.tsx)
+- [x] 5 gotowych szablonów: LLM Router, Image Router, Parallel Search, Vector Search, KIMI Auto-Deploy
+
+### Punkt 4: Autonomiczne modyfikacje ai-control-center
+- [x] tRPC router `aiControlCenter` z CRUD przez Supabase REST API
+- [x] Operacje: addAgent, updateAgent, addTask, updateTask, syncKimiRegistry
+- [x] Audit log wszystkich zmian w integration_logs
+- [x] UI: AIControlCenter.tsx z panelem agentów, tasków i sync
+
+### Punkt 5: Monitoring Sentinel.app
+- [x] tRPC router `sentinel` z live logs przez Supabase REST API
+- [x] Dashboard: metryki wykonań, alerty bezpieczeństwa, health check agentów
+- [x] Automatyczne wysyłanie alertów do Sentinel przy błędach KIMI
+- [x] UI: SentinelMonitor.tsx z wykresami i logami real-time
+
+### Nawigacja i routing
+- [x] App.tsx: 4 nowe trasy (/semantic-search, /auto-deploy, /ai-control-center, /sentinel)
+- [x] DashboardLayout: grupowane menu (Core, Autonomous, Integrations, Tools)
+- [x] Testy: 20/20 passing
