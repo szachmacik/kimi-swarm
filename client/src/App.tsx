@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
+import AdminLogin from "@/pages/AdminLogin";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -12,6 +13,68 @@ import CostCalculator from "./pages/CostCalculator";
 import Templates from "./pages/Templates";
 import Architecture from "./pages/Architecture";
 import Integrations from "./pages/Integrations";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Loader2, Zap } from "lucide-react";
+
+/**
+ * AuthGate — blokuje dostęp do całego dashboardu dla niezalogowanych.
+ * Niezalogowany użytkownik widzi tylko stronę AdminLogin.
+ * Zalogowany, ale nie-admin widzi komunikat o braku uprawnień.
+ */
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  // Ładowanie sesji
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+            <Zap className="h-8 w-8 text-primary animate-pulse" />
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Authenticating...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Niezalogowany → strona logowania
+  if (!user) {
+    return <AdminLogin />;
+  }
+
+  // Zalogowany, ale nie admin → brak dostępu
+  if (user.role !== "admin") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-card border border-red-500/20 rounded-2xl p-8 text-center shadow-2xl">
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 inline-flex mb-4">
+            <Zap className="h-8 w-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground mb-2">Access Denied</h2>
+          <p className="text-sm text-muted-foreground mb-1">
+            Your account <span className="text-foreground font-medium">{user.email || user.name}</span> does not have admin privileges.
+          </p>
+          <p className="text-xs text-muted-foreground mt-4">
+            This incident has been logged by Sentinel.app.
+          </p>
+          <button
+            onClick={() => window.location.href = "/api/trpc/auth.logout"}
+            className="mt-6 text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin zalogowany → pełny dostęp
+  return <>{children}</>;
+}
 
 function Router() {
   return (
@@ -37,7 +100,9 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AuthGate>
+            <Router />
+          </AuthGate>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

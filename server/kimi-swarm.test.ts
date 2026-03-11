@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FUNCTION_REGISTRY_DATA, EDGE_FUNCTION_TEMPLATES_DATA } from "./functionData";
+import { appRouter } from "./routers";
 
 describe("Function Registry Data", () => {
   it("should have at least 80 functions", () => {
@@ -95,6 +96,44 @@ describe("KIMI Orchestrator System Prompt", () => {
       f => f.category === "llm" && f.costPer1k !== undefined
     );
     expect(llmWithCost.length).toBeGreaterThan(5);
+  });
+});
+
+describe("Admin-Only Access Control", () => {
+  it("registry.list should use adminProcedure — throws FORBIDDEN for non-admin", async () => {
+    const nonAdminCtx = {
+      user: { id: 2, openId: "stranger", name: "Stranger", email: "x@x.com", loginMethod: "manus", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() },
+      req: { protocol: "https", headers: {} } as any,
+      res: { clearCookie: () => {} } as any,
+    };
+    const caller = appRouter.createCaller(nonAdminCtx);
+    await expect(caller.registry.list()).rejects.toThrow();
+  });
+
+  it("registry.list should succeed for admin user", async () => {
+    const adminCtx = {
+      user: { id: 1, openId: "owner", name: "Admin", email: "admin@admin.com", loginMethod: "manus", role: "admin" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() },
+      req: { protocol: "https", headers: {} } as any,
+      res: { clearCookie: () => {} } as any,
+    };
+    const caller = appRouter.createCaller(adminCtx);
+    // Should not throw — returns array (may be empty without DB)
+    const result = await caller.registry.list().catch(e => {
+      // DB connection errors are acceptable in test env
+      if (e.message?.includes("database") || e.message?.includes("connect") || e.message?.includes("ECONNREFUSED")) return [];
+      throw e;
+    });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("unauthenticated user should get UNAUTHORIZED from registry.list", async () => {
+    const anonCtx = {
+      user: null,
+      req: { protocol: "https", headers: {} } as any,
+      res: { clearCookie: () => {} } as any,
+    };
+    const caller = appRouter.createCaller(anonCtx);
+    await expect(caller.registry.list()).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
 

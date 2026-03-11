@@ -32,3 +32,10 @@
 - [x] Vitest tests: 17 tests passing (Function Registry, Edge Templates, KIMI Orchestrator, Integrations)
 - [x] Seed: 83 functions + 5 templates seeded to DB
 - [ ] Checkpoint + delivery
+
+## Phase 8: Zabezpieczenie dostępu — Admin Gate
+- [x] Middleware server: wszystkie tRPC procedury zmienione z publicProcedure na adminProcedure
+- [x] Frontend: AuthGate — loading → AdminLogin (niezalogowany) → Access Denied (nie-admin) → Dashboard (admin)
+- [x] Whitelist: tylko owner (OWNER_OPEN_ID) automatycznie dostaje role=admin przy pierwszym logowaniu
+- [x] Login page: AdminLogin.tsx z komunikatem "Restricted Access — Admin Only" i Sentinel monitoring info
+- [x] Testy: 3 nowe testy access control (non-admin throws, admin succeeds, anon FORBIDDEN) — 20/20 passing

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { nanoid } from "nanoid";
 import {
@@ -15,7 +15,7 @@ import { FUNCTION_REGISTRY_DATA, EDGE_FUNCTION_TEMPLATES_DATA } from "./function
 
 // ─── Registry Router ──────────────────────────────────────────────────────────
 const registryRouter = router({
-  list: publicProcedure
+  list: adminProcedure
     .input(z.object({ category: z.string().optional(), search: z.string().optional() }).optional())
     .query(async ({ input }) => {
       if (input?.search && input.search.length > 0) {
@@ -24,18 +24,17 @@ const registryRouter = router({
       return getAllFunctions(input?.category);
     }),
 
-  stats: publicProcedure.query(async () => {
+  stats: adminProcedure.query(async () => {
     return getRegistryStats();
   }),
 
-  get: publicProcedure
+  get: adminProcedure
     .input(z.object({ name: z.string() }))
     .query(async ({ input }) => {
       return getFunctionByName(input.name);
     }),
 
-  seed: protectedProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") throw new Error("Admin only");
+  seed: adminProcedure.mutation(async ({ ctx }) => {
     let seeded = 0;
     for (const fn of FUNCTION_REGISTRY_DATA) {
       await upsertFunction({
@@ -55,7 +54,7 @@ const registryRouter = router({
     return { seeded, total: FUNCTION_REGISTRY_DATA.length };
   }),
 
-  exportJson: publicProcedure.query(async () => {
+  exportJson: adminProcedure.query(async () => {
     const fns = await getAllFunctions();
     return {
       version: "1.0.0",
@@ -142,7 +141,7 @@ Return a JSON plan with this structure:
 }`;
 
 const orchestratorRouter = router({
-  plan: publicProcedure
+  plan: adminProcedure
     .input(z.object({ prompt: z.string().min(1).max(4000) }))
     .mutation(async ({ input }) => {
       const sessionId = nanoid(16);
@@ -227,31 +226,30 @@ const orchestratorRouter = router({
       }
     }),
 
-  history: publicProcedure
+  history: adminProcedure
     .input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional())
     .query(async ({ input }) => {
       return getRecentExecutions(input?.limit || 20);
     }),
 
-  stats: publicProcedure.query(async () => {
+  stats: adminProcedure.query(async () => {
     return getExecutionStats();
   }),
 });
 
 // ─── Templates Router ─────────────────────────────────────────────────────────
 const templatesRouter = router({
-  list: publicProcedure.query(async () => {
+  list: adminProcedure.query(async () => {
     return getAllTemplates();
   }),
 
-  get: publicProcedure
+  get: adminProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ input }) => {
       return getTemplateBySlug(input.slug);
     }),
 
-  seed: protectedProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") throw new Error("Admin only");
+  seed: adminProcedure.mutation(async ({ ctx }) => {
     let seeded = 0;
     for (const t of EDGE_FUNCTION_TEMPLATES_DATA) {
       await upsertTemplate({
@@ -325,7 +323,7 @@ const templatesRouter = router({
 
 // ─── Integrations Router ──────────────────────────────────────────────────────
 const integrationsRouter = router({
-  logs: publicProcedure
+  logs: adminProcedure
     .input(z.object({ integration: z.string().optional(), limit: z.number().default(50) }).optional())
     .query(async ({ input }) => {
       return getIntegrationLogs(input?.integration, input?.limit || 50);
@@ -450,7 +448,7 @@ const integrationsRouter = router({
 
 // ─── Cost Calculator Router ───────────────────────────────────────────────────
 const costRouter = router({
-  calculate: publicProcedure
+  calculate: adminProcedure
     .input(z.object({
       functionName: z.string(),
       inputTokens: z.number().default(1000),
@@ -485,7 +483,7 @@ const costRouter = router({
       };
     }),
 
-  compare: publicProcedure
+  compare: adminProcedure
     .input(z.object({
       category: z.string().optional(),
       inputTokens: z.number().default(1000),
