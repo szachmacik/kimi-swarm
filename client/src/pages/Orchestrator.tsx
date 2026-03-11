@@ -7,17 +7,97 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Bot, Zap, Clock, DollarSign, GitBranch, CheckCircle2, Loader2, Activity, Terminal, Play, RotateCcw, ChevronDown, ChevronRight, Wrench, AlertCircle, TrendingUp } from "lucide-react";
+import {
+  Bot, Zap, Clock, DollarSign, GitBranch, CheckCircle2, Loader2,
+  Activity, Terminal, Play, RotateCcw, ChevronDown, ChevronRight,
+  Wrench, AlertCircle, TrendingUp, Sparkles, ArrowRight
+} from "lucide-react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
-const EXAMPLE_PROMPTS = [
-  "Generate a product image, write marketing copy, and send it via email",
-  "Search the web for AI news, summarize with GPT-4o-mini, and store in database",
-  "Transcribe audio file, translate to Polish, and generate TTS response",
-  "Analyze code for bugs, fix them, run tests, and deploy to Supabase Edge Functions",
-  "Create a vector embedding of documents and find semantically similar content",
-  "Build a complete landing page: generate hero image, write copy, create HTML, deploy",
+interface ExampleTask {
+  title: string;
+  category: string;
+  prompt: string;
+  tools: string[];
+  estimatedCost: string;
+  estimatedTime: string;
+  colorClass: string;
+}
+
+const EXAMPLE_TASKS: ExampleTask[] = [
+  {
+    title: "AI Content Pipeline",
+    category: "Marketing",
+    prompt: "Generate a product image for a SaaS dashboard app, write 3 variants of marketing copy in English and Polish, calculate the total cost of all API calls, and send the results via email to the owner.",
+    tools: ["image_generation", "kimi_chat", "deepl_translate", "cost_calculator", "resend_email"],
+    estimatedCost: "$0.08",
+    estimatedTime: "~25s",
+    colorClass: "text-pink-400 border-pink-500/30 bg-pink-500/5",
+  },
+  {
+    title: "Web Research & Summarize",
+    category: "Research",
+    prompt: "Search the web for the 5 latest AI model releases in 2025, extract key details (model name, company, capabilities, pricing), summarize them in a structured table, store the results in the kimi_executions database, and generate a semantic embedding for future search.",
+    tools: ["web_search", "kimi_chat", "supabase_insert", "moonshot_embedding"],
+    estimatedCost: "$0.02",
+    estimatedTime: "~15s",
+    colorClass: "text-blue-400 border-blue-500/30 bg-blue-500/5",
+  },
+  {
+    title: "Audio → Multilingual Text",
+    category: "Audio/NLP",
+    prompt: "Transcribe an audio file using Whisper, detect the language, translate the transcript to English, Polish, and German in parallel, generate a TTS audio response in each language, and return all 3 audio files with cost breakdown.",
+    tools: ["whisper_transcribe", "deepl_translate", "elevenlabs_tts", "parallel_execution"],
+    estimatedCost: "$0.05",
+    estimatedTime: "~30s",
+    colorClass: "text-amber-400 border-amber-500/30 bg-amber-500/5",
+  },
+  {
+    title: "Code Review & Auto-Deploy",
+    category: "DevOps",
+    prompt: "Analyze this TypeScript code for bugs and security issues, generate a fixed version, write unit tests with Vitest, deploy the fixed code as a Supabase Edge Function named 'kimi-auto-fix', and log the deployment result to Sentinel.app for audit.",
+    tools: ["kimi_chat", "code_execution", "supabase_deploy", "sentinel_log"],
+    estimatedCost: "$0.03",
+    estimatedTime: "~20s",
+    colorClass: "text-green-400 border-green-500/30 bg-green-500/5",
+  },
+  {
+    title: "Semantic Document Search",
+    category: "Vector Search",
+    prompt: "Take these 10 product descriptions, generate pgvector embeddings for each using moonshot-v1-embedding, store them in the function_registry table, then perform a semantic search for 'payment processing with fraud detection' and return the top 5 most similar results with similarity scores.",
+    tools: ["moonshot_embedding", "pgvector_upsert", "pgvector_search", "supabase_query"],
+    estimatedCost: "$0.01",
+    estimatedTime: "~10s",
+    colorClass: "text-cyan-400 border-cyan-500/30 bg-cyan-500/5",
+  },
+  {
+    title: "Full Landing Page Build",
+    category: "Web Dev",
+    prompt: "Build a complete SaaS landing page: generate a hero image with DALL-E 3, write compelling copy with KIMI K2.5, create responsive HTML/CSS/JS, deploy as a Supabase Edge Function, register the URL in ai-control-center, and return the live URL with performance metrics.",
+    tools: ["dalle3_image", "kimi_chat", "code_generation", "supabase_deploy", "acc_register"],
+    estimatedCost: "$0.12",
+    estimatedTime: "~45s",
+    colorClass: "text-purple-400 border-purple-500/30 bg-purple-500/5",
+  },
+  {
+    title: "AI Control Center Sync",
+    category: "Integration",
+    prompt: "Connect to ai-control-center Supabase, list all active agents and their last execution times, identify any agents that haven't run in 24h, create a new task for each idle agent with priority=high, and send a Sentinel.app security audit report with the findings.",
+    tools: ["supabase_query", "acc_agents_list", "acc_task_create", "sentinel_audit"],
+    estimatedCost: "$0.01",
+    estimatedTime: "~8s",
+    colorClass: "text-indigo-400 border-indigo-500/30 bg-indigo-500/5",
+  },
+  {
+    title: "Cost Optimizer Analysis",
+    category: "Analytics",
+    prompt: "Analyze the last 50 KIMI executions from the database, calculate total API costs per category (LLM, Image, Audio, Search), identify the 3 most expensive operations, suggest cheaper alternatives from the function registry using semantic search, and generate a cost optimization report.",
+    tools: ["supabase_query", "cost_calculator", "semantic_search", "kimi_chat"],
+    estimatedCost: "$0.02",
+    estimatedTime: "~12s",
+    colorClass: "text-orange-400 border-orange-500/30 bg-orange-500/5",
+  },
 ];
 
 interface ToolCall {
@@ -105,6 +185,44 @@ function StepCard({ step, index }: { step: PlanStep; index: number }) {
   );
 }
 
+function ExampleTaskCard({ task, onSelect }: { task: ExampleTask; onSelect: (prompt: string) => void }) {
+  return (
+    <Card className={`bg-card border cursor-pointer hover:scale-[1.01] transition-all group ${task.colorClass}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div>
+            <p className="text-sm font-semibold text-foreground">{task.title}</p>
+            <Badge variant="outline" className={`text-xs mt-1 border ${task.colorClass}`}>{task.category}</Badge>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-xs text-green-400 font-mono font-bold">{task.estimatedCost}</p>
+            <p className="text-xs text-muted-foreground">{task.estimatedTime}</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{task.prompt}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-1">
+            {task.tools.slice(0, 3).map(t => (
+              <code key={t} className="text-xs bg-muted/30 text-muted-foreground px-1.5 py-0.5 rounded">{t}</code>
+            ))}
+            {task.tools.length > 3 && (
+              <span className="text-xs text-muted-foreground">+{task.tools.length - 3}</span>
+            )}
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onSelect(task.prompt)}
+            className={`text-xs gap-1 h-7 opacity-0 group-hover:opacity-100 transition-opacity ${task.colorClass}`}
+          >
+            Try <ArrowRight className="h-3 w-3" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Orchestrator() {
   const [prompt, setPrompt] = useState("");
   const [plan, setPlan] = useState<KimiPlan | null>(null);
@@ -112,7 +230,7 @@ export default function Orchestrator() {
   const [durationMs, setDurationMs] = useState<number | null>(null);
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string; toolCalls?: ToolCall[]; durationMs?: number; cost?: number }>>([]);
   const [chatInput, setChatInput] = useState("");
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState("examples");
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const planMutation = trpc.orchestrator.plan.useMutation({
@@ -171,6 +289,13 @@ export default function Orchestrator() {
     setChatInput("");
   };
 
+  const handleSelectExample = (taskPrompt: string) => {
+    setChatInput(taskPrompt);
+    setPrompt(taskPrompt);
+    setActiveTab("chat");
+    toast.success("Example loaded — press Send or Generate Plan");
+  };
+
   const handleReset = () => {
     setChatMessages([]);
     setPlan(null);
@@ -221,6 +346,9 @@ export default function Orchestrator() {
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4 bg-muted/30">
+              <TabsTrigger value="examples" className="gap-2 text-xs">
+                <Sparkles className="h-3.5 w-3.5" /> Examples
+              </TabsTrigger>
               <TabsTrigger value="chat" className="gap-2 text-xs">
                 <Bot className="h-3.5 w-3.5" /> KIMI Chat
               </TabsTrigger>
@@ -231,6 +359,18 @@ export default function Orchestrator() {
                 <Clock className="h-3.5 w-3.5" /> History
               </TabsTrigger>
             </TabsList>
+
+            {/* Examples Tab */}
+            <TabsContent value="examples" className="space-y-3">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm text-muted-foreground">8 ready-to-run autonomous workflows — click any card to load it into KIMI Chat</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {EXAMPLE_TASKS.map(task => (
+                  <ExampleTaskCard key={task.title} task={task} onSelect={handleSelectExample} />
+                ))}
+              </div>
+            </TabsContent>
 
             {/* Chat Tab */}
             <TabsContent value="chat" className="space-y-3">
@@ -244,14 +384,14 @@ export default function Orchestrator() {
                           <p className="text-sm font-medium text-foreground">KIMI K2.5 is ready</p>
                           <p className="text-xs text-muted-foreground mt-1">Chat with KIMI and watch it call tools autonomously</p>
                         </div>
-                        <div className="flex flex-wrap gap-2 justify-center mt-2">
-                          {EXAMPLE_PROMPTS.slice(0, 3).map(p => (
+                        <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                          {EXAMPLE_TASKS.slice(0, 3).map(t => (
                             <button
-                              key={p}
-                              onClick={() => { setChatInput(p); }}
-                              className="text-xs px-2.5 py-1.5 rounded-lg bg-muted/30 text-muted-foreground border border-border hover:border-primary/30 hover:text-foreground transition-all text-left max-w-[200px] truncate"
+                              key={t.title}
+                              onClick={() => { setChatInput(t.prompt); }}
+                              className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all text-left ${t.colorClass}`}
                             >
-                              {p}
+                              {t.title}
                             </button>
                           ))}
                         </div>
@@ -348,15 +488,15 @@ export default function Orchestrator() {
               </Card>
 
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Example workflows:</p>
+                <p className="text-xs text-muted-foreground mb-2">Quick-load from examples:</p>
                 <div className="flex flex-wrap gap-2">
-                  {EXAMPLE_PROMPTS.map(p => (
+                  {EXAMPLE_TASKS.map(t => (
                     <button
-                      key={p}
-                      onClick={() => setPrompt(p)}
-                      className="text-xs px-2.5 py-1.5 rounded-lg bg-muted/30 text-muted-foreground border border-border hover:border-primary/30 hover:text-foreground transition-all text-left"
+                      key={t.title}
+                      onClick={() => setPrompt(t.prompt)}
+                      className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all ${t.colorClass}`}
                     >
-                      {p.substring(0, 55)}...
+                      {t.title}
                     </button>
                   ))}
                 </div>
@@ -453,7 +593,7 @@ export default function Orchestrator() {
                 <code className="text-xs text-primary font-mono">{sessionId}</code>
                 {durationMs && (
                   <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" /> {durationMs}ms planning time
+                    <Clock className="h-3 w-3" /> {durationMs}ms planning
                   </div>
                 )}
               </CardContent>

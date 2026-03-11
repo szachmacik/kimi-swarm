@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { Search, Zap, Database, Loader2, Star, DollarSign, Clock, ChevronRight, Layers } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Search, Zap, Database, Loader2, Star, DollarSign, Clock,
+  ChevronRight, Layers, Sparkles, CheckCircle2, AlertCircle, RefreshCw
+} from "lucide-react";
 import { toast } from "sonner";
 
 const EXAMPLE_QUERIES = [
@@ -56,6 +60,12 @@ export default function SemanticSearch() {
   const [searched, setSearched] = useState(false);
   const [searchTime, setSearchTime] = useState<number | null>(null);
 
+  // Embedding generation state
+  const [embedProgress, setEmbedProgress] = useState(0);
+  const [embedStatus, setEmbedStatus] = useState<"idle" | "running" | "done" | "error">("idle");
+  const [embedStats, setEmbedStats] = useState<{ seeded: number; failed: number; total: number } | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const searchMutation = trpc.registry.semanticSearch.useMutation({
     onSuccess: (data) => {
       setResults(data.results || []);
@@ -71,6 +81,33 @@ export default function SemanticSearch() {
   });
 
   const { data: registryStats } = trpc.registry.stats.useQuery();
+
+  const seedEmbedMutation = trpc.registry.seedEmbeddings.useMutation({
+    onMutate: () => {
+      setEmbedStatus("running");
+      setEmbedProgress(3);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = setInterval(() => {
+        setEmbedProgress(p => {
+          if (p >= 92) return p;
+          return p + Math.random() * 5;
+        });
+      }, 700);
+    },
+    onSuccess: (data) => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      setEmbedProgress(100);
+      setEmbedStatus("done");
+      setEmbedStats({ seeded: data.seeded, failed: data.failed, total: data.total });
+      toast.success(`Embeddings generated: ${data.seeded}/${data.total} functions indexed`);
+    },
+    onError: (err) => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      setEmbedStatus("error");
+      setEmbedProgress(0);
+      toast.error("Embedding generation failed: " + err.message);
+    },
+  });
 
   const handleSearch = () => {
     if (!query.trim()) return;
@@ -93,6 +130,84 @@ export default function SemanticSearch() {
           Find functions by meaning, not just keywords. Powered by pgvector cosine similarity search.
         </p>
       </div>
+
+      {/* Embedding Generator Panel */}
+      <Card className={`border ${embedStatus === "done" ? "border-green-500/30 bg-green-500/5" : embedStatus === "error" ? "border-red-500/30 bg-red-500/5" : embedStatus === "running" ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${embedStatus === "done" ? "bg-green-500/10" : embedStatus === "running" ? "bg-primary/10" : "bg-muted/30"}`}>
+                {embedStatus === "running" ? (
+                  <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                ) : embedStatus === "done" ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-400" />
+                ) : embedStatus === "error" ? (
+                  <AlertCircle className="h-4 w-4 text-red-400" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">pgvector Embeddings</p>
+                <p className="text-xs text-muted-foreground">
+                  {embedStatus === "idle" && "Generate 1536-dim KIMI embeddings for all 83 functions to enable semantic search"}
+                  {embedStatus === "running" && "Generating embeddings via moonshot-v1-embedding API… (~60s for 83 functions)"}
+                  {embedStatus === "done" && embedStats && `✓ ${embedStats.seeded} indexed, ${embedStats.failed} failed — semantic search is now fully operational`}
+                  {embedStatus === "error" && "Generation failed — check KIMI API key and try again"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {embedStatus === "done" && embedStats && (
+                <div className="hidden sm:flex items-center gap-3 text-xs">
+                  <span className="text-green-400 font-medium">{embedStats.seeded} indexed</span>
+                  {embedStats.failed > 0 && <span className="text-red-400">{embedStats.failed} failed</span>}
+                </div>
+              )}
+              <Button
+                size="sm"
+                variant={embedStatus === "done" ? "outline" : "default"}
+                onClick={() => { setEmbedProgress(0); seedEmbedMutation.mutate(); }}
+                disabled={embedStatus === "running"}
+                className="gap-2 shrink-0"
+              >
+                {embedStatus === "running" ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Generating…</>
+                ) : embedStatus === "done" ? (
+                  <><RefreshCw className="h-3.5 w-3.5" />Re-generate</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" />Generate Embeddings</>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          {(embedStatus === "running" || (embedStatus === "done" && embedProgress === 100)) && (
+            <div className="mt-3 space-y-1.5">
+              <Progress value={embedProgress} className="h-1.5" />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                  {embedStatus === "running"
+                    ? `Processing functions… ${Math.round((embedProgress / 100) * 83)}/83`
+                    : "Complete"}
+                </span>
+                <span>{Math.round(embedProgress)}%</span>
+              </div>
+            </div>
+          )}
+
+          {/* Info row when idle */}
+          {embedStatus === "idle" && (
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-cyan-400" />moonshot-v1-embedding</span>
+              <span className="flex items-center gap-1"><Database className="h-3 w-3 text-primary" />1536 dimensions</span>
+              <span className="flex items-center gap-1"><Star className="h-3 w-3 text-amber-400" />Cosine similarity</span>
+              <span className="flex items-center gap-1"><Layers className="h-3 w-3 text-purple-400" />83 functions</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -152,7 +267,7 @@ export default function SemanticSearch() {
 
               <div className="p-3 rounded-lg bg-muted/20 border border-border text-xs text-muted-foreground space-y-1">
                 <p className="text-foreground font-medium mb-1">How it works:</p>
-                <p>1. Query → OpenAI text-embedding-3-small</p>
+                <p>1. Query → moonshot-v1-embedding</p>
                 <p>2. 1536-dim vector stored in pgvector</p>
                 <p>3. Cosine similarity match against registry</p>
                 <p>4. Results ranked by semantic relevance</p>
@@ -192,7 +307,7 @@ export default function SemanticSearch() {
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") handleSearch(); }}
-                    placeholder="Describe what you want to do in natural language..."
+                    placeholder="Describe what you want to do in natural language…"
                     className="pl-9 bg-muted/20 border-border"
                   />
                 </div>
@@ -215,8 +330,8 @@ export default function SemanticSearch() {
               <CardContent className="p-8 flex items-center justify-center gap-3">
                 <Loader2 className="h-5 w-5 text-primary animate-spin" />
                 <div>
-                  <p className="text-sm text-foreground">Generating embedding and searching...</p>
-                  <p className="text-xs text-muted-foreground mt-1">OpenAI text-embedding-3-small → pgvector cosine similarity</p>
+                  <p className="text-sm text-foreground">Generating embedding and searching…</p>
+                  <p className="text-xs text-muted-foreground mt-1">moonshot-v1-embedding → pgvector cosine similarity</p>
                 </div>
               </CardContent>
             </Card>
@@ -228,6 +343,9 @@ export default function SemanticSearch() {
                 <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-30" />
                 <p className="text-sm text-muted-foreground">No functions found above threshold {threshold[0].toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground mt-1">Try lowering the threshold or rephrasing your query</p>
+                {embedStatus === "idle" && (
+                  <p className="text-xs text-amber-400 mt-2">Tip: Generate embeddings first for best results</p>
+                )}
               </CardContent>
             </Card>
           )}

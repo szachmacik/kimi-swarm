@@ -78,3 +78,21 @@
 - [x] App.tsx: 4 nowe trasy (/semantic-search, /auto-deploy, /ai-control-center, /sentinel)
 - [x] DashboardLayout: grupowane menu (Core, Autonomous, Integrations, Tools)
 - [x] Testy: 20/20 passing
+
+## Phase 30-33: Rozbudowa o sugestie
+
+### Sugestia 1: Embeddingi pgvector
+- [ ] Auto-seed embeddingów przy starcie serwera (background job)
+- [ ] Przycisk "Generate Embeddings" w SemanticSearch.tsx z progress bar
+- [ ] tRPC procedure `registry.generateEmbeddings` — batch KIMI embedding API
+- [ ] Status embeddingów: ile funkcji ma wektory, ile czeka
+
+### Sugestia 2: Orchestrator — przykładowe zadania
+- [ ] 8 gotowych szablonów promptów w Orchestrator.tsx (Quick Start)
+- [ ] Kategorie: LLM Pipeline, Image Processing, Parallel Search, Auto-Deploy, DB Query, Cost Optimization, Security Audit, Full Workflow
+- [ ] One-click "Try this example" wstrzykujący prompt do chatu
+
+### Sugestia 3: Coolify autodeploy webhook
+- [ ] Nowy token Coolify z Vault (refresh)
+- [ ] Redeploy kimi-swarm-prod na Coolify
+- [ ] Webhook URL zapisany w autodeploy_vault dla przyszłych deployów
