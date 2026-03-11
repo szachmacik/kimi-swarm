@@ -19,6 +19,8 @@ import SentinelMonitor from "./pages/SentinelMonitor";
 import AutoDeploy from "./pages/AutoDeploy";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Loader2, Zap } from "lucide-react";
+import Login from "@/pages/Login";
+import AuthCallback from "@/pages/AuthCallback";
 
 /**
  * AuthGate — blokuje dostęp do całego dashboardu dla niezalogowanych.
@@ -84,6 +86,8 @@ function Router() {
   return (
     <DashboardLayout>
       <Switch>
+        <Route path="/login" element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/" component={Home} />
         <Route path="/registry" component={Registry} />
         <Route path="/orchestrator" component={Orchestrator} />
