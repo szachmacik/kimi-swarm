@@ -33,6 +33,8 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
+  // Guardian: no-auth endpoint, must be first
+  app.use("/api/guardian", guardianRouter);
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
@@ -68,7 +70,6 @@ async function startServer() {
   );
   // development mode uses Vite, production mode uses static files
   // AI Guardian — must be before static serving
-  app.use("/api/guardian", guardianRouter);
   if (process.env.NODE_ENV === "development") {
 
     const { setupVite } = await import("./vite");
