@@ -1,4 +1,5 @@
 FROM node:22-slim AS builder
+ARG CACHE_BUST=1773678481
 
 WORKDIR /app
 
