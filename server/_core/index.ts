@@ -76,6 +76,11 @@ async function startServer() {
 
     await setupVite(app, server);
   } else {
+    // API 404 guard — prevent SPA from serving /api/* routes
+    app.use("/api", (_req, res, next) => {
+      if (res.headersSent) return next();
+      res.status(404).json({ error: "API endpoint not found" });
+    });
     serveStatic(app);
   }
 
