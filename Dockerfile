@@ -15,6 +15,7 @@ COPY patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
 # Copy source
+ARG CACHEBUST=1773729299
 COPY . .
 
 # Build frontend and backend
