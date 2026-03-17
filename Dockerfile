@@ -33,5 +33,5 @@ EXPOSE 3000
 
 ENV NODE_ENV=production
 
-LABEL build=1773681957
+LABEL build=1773728552
 CMD ["node", "dist/index.js"]
