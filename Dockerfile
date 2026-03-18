@@ -1,4 +1,4 @@
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 LABEL build="1773816993"
 ARG CACHE_BUST=1773816413
 
@@ -22,7 +22,7 @@ COPY . .
 RUN pnpm build
 
 # Production stage
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 
 WORKDIR /app
 
