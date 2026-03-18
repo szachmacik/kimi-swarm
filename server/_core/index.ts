@@ -34,6 +34,17 @@ async function startServer() {
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
   // Guardian v1773728505
+
+  // Health check endpoint (wymagany przez monitoring i Coolify)
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      version: process.env.npm_package_version || "1.0.0",
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(process.uptime()),
+    });
+  });
+
   app.use("/api/guardian", guardianRouter);
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
