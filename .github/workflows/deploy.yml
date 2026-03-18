@@ -1,0 +1,18 @@
+name: Deploy to Coolify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify Deploy
+        run: |
+          echo "Deploying kimi-swarm → Coolify uuid=co4sg0kow4o0g400g0sw0008"
+          curl -s -f -X POST \
+            "https://coolify.ofshore.dev/api/v1/deploy?uuid=co4sg0kow4o0g400g0sw0008&force=false" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" \
+            && echo "✅ Deploy triggered" || echo "⚠️ Deploy trigger failed (non-critical)"
